@@ -1,0 +1,11 @@
+{
+  "name": "schoolbot",
+  "version": "0.0.1",
+  "description": "An DiscordBot for School.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js test"
+  },
+  "author": "Aaron Eggert",
+  "license": "ISC"
+}
