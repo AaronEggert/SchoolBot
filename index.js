@@ -28,7 +28,7 @@ client.on('interactionCreate', async interaction => {
 
 	if (commandName === 'homework') { 
 		if (interaction.options.getSubcommand() === 'add') { 
-			const fach = interaction.options.getString('fach')
+			const fach = convertFach(interaction.options.getString('fach'))
 			const aufgabe = interaction.options.getString('aufgabe')
 			const jahr = interaction.options.getString('jahr')
 			const monat = interaction.options.getString('monat')
@@ -40,23 +40,17 @@ client.on('interactionCreate', async interaction => {
 				abgabe: interactionDataToDate(jahr, monat, tag)
 			}
 
-			const exampleEmbed = new MessageEmbed()
-				.setColor('#ffffff')
-				.setTitle(aufgabe)
-				//.setURL('https://discord.js.org/')
-				//.setAuthor('Aaron Eggert', 'https://i.imgur.com/AfFp7pu.png', 'https://discord.js.org')
-				.setDescription(fach)
-				//.setThumbnail('https://i.imgur.com/AfFp7pu.png')
-				//.addFields(
-				//	{ name: 'Regular field title', value: 'Some value here' },
-				//	{ name: '\u200B', value: '\u200B' },
-				//	{ name: 'Inline field title', value: 'Some value here', inline: true },
-				//	{ name: 'Inline field title', value: 'Some value here', inline: true },
-				//)
-				//.addField('Inline field title', 'Some value here', true)
-				//.setImage('https://i.imgur.com/AfFp7pu.png')
-				.setTimestamp()
-				.setFooter('@SchoolBot', '');
+			const error = new MessageEmbed()
+				.setColor('#E74C3C')
+				.setTitle("")
+				.setDescription(':x: Error: Invalid date - Dieses Datum war anscheinend schon');
+
+
+			dif = difTime(inputs.abgabe)
+			if (dif.tage <= 0 && dif.stunden <= 0) {
+				interaction.reply({embeds: [error]})
+				return
+			}
 
 			const embed2 = new MessageEmbed()
 				.setColor('#2ECC71')
@@ -64,9 +58,9 @@ client.on('interactionCreate', async interaction => {
 				.setDescription(':white_check_mark: Aufgabe wurde Erfolgreich hinzugefügt!');
 
 			const embed1 = new MessageEmbed()
-				.setColor('#1ABC9C')
+				.setColor(fachZuFarbe(inputs.fach))
 				.setTitle('')
-				.setDescription(`**Aufgabe**:	${inputs.aufgabe}\n**Fach**:	${inputs.fach}\n **Datum**:	${inputs.abgabe.getDate()}.${inputs.abgabe.getMonth()}.${inputs.abgabe.getFullYear()}\n`)
+				.setDescription(`**Aufgabe**:	${inputs.aufgabe}\n**Fach**:\t${inputs.fach}\n **Datum**:\t${inputs.abgabe.getDate()}.${inputs.abgabe.getMonth()}.${inputs.abgabe.getFullYear()}\n **Ersteller**:\t${interaction.user.tag}`)
 
 			await interaction.reply({embeds: [embed1, embed2]})
 			var data  = fs.readFileSync('./data.json'),
@@ -81,9 +75,20 @@ client.on('interactionCreate', async interaction => {
 			// Letze  	versuchen das automatisch array erstellt wenn nicht vorhanden und eingetragen werden und sonst im vorhandenen array eintragen
 					// servers[guildID] = ({fach:fach, aufgabe:aufgabe, tag:tag})
 
-			
+			if (!servers[guildID]) {
+				servers[guildID] = {}
+			}
 
-			fs.writeFileSync('./data.json', JSON.stringify(json, null, 4));
+			server = servers[guildID]
+			if (server.aufgaben || server["aufgaben"]) {
+				server["aufgaben"].push({"fach": inputs.fach, "aufgabe": {"jahr": inputs.abgabe.getFullYear(), "monat": inputs.abgabe.getMonth(), "tag": inputs.abgabe.getDate()}, "abgabe": inputs.abgabe, "ersteller": interaction.user.tag})
+			}
+			else {
+				server["aufgaben"] = []
+				server["aufgaben"].push({"fach": inputs.fach, "aufgabe": {"jahr": inputs.abgabe.getFullYear(), "monat": inputs.abgabe.getMonth(), "tag": inputs.abgabe.getDate()}, "abgabe": inputs.abgabe, "ersteller": interaction.user.tag})
+			}
+
+			fs.writeFileSync('./data.json', JSON.stringify(json, null, 3));
 
 		}
 	}
@@ -170,5 +175,47 @@ function interactionDataToDate(jahr, monat, tag) {
 	return new Date(_tempJahr, _tempMonat, tag)
 
 }
+
+function convertFach(fach) {
+	switch (fach)
+	{
+		case 'fach_mathe':
+			return 'mathe';
+		case 'fach_deutsch': 
+			return 'deutsch';
+		case 'fach_englisch':
+			return 'englisch';
+		default:
+			return 'Error: Invalid fach';
+	}
+}
+
+function fachZuFarbe(fach) {
+	switch(fach) {
+		case 'mathe':
+			return 0x3498DB
+		case 'deutsch': 
+			return 0xE74C3C
+		case 'englisch':
+			return 0xE67E22
+		default:
+			return 'Error: Invalid fach'
+	}
+	
+}
+
+function difTime(date) {
+	dif =  ( date.getTime() - 2628000000 + (10 * 3600000)) - new Date().getTime() ;
+	tage = 0
+	for (let i = 0; dif >= 86400000; i++) {
+		dif -= 86400000;
+		tage++;
+	}
+	return zeit = {
+		"stunden": Math.round(dif / 3600000),
+		"tage": tage
+	}
+}
+
 
 
