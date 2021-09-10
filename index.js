@@ -114,7 +114,7 @@ client.on('interactionCreate', async interaction => {
 
 				for (let i = 0; i < server.aufgaben.length; i++) {
 					embedAufgaben
-						.addField(`${i} `, `**Fach**: ${server.aufgaben[i].fach}\n**Aufgabe**: ${server.aufgaben[i].aufgabe}\n**Abgabe:** Es sind noch ${difTime(server.aufgaben[i].abgabe).tage} Tage/n und ${difTime(server.aufgaben[i].abgabe).stunden} Stunde/n bis zur Abgabe\n**Ersteller**: ${server.aufgaben[i].ersteller}`, false)
+						.addField(`${i} `, `**Fach**: ${server.aufgaben[i].fach}\n**Aufgabe**: ${server.aufgaben[i].aufgabe}\n**Abgabe:** Es sind noch \`${difTime(server.aufgaben[i].abgabe).tage}\` Tage/n und \`${difTime(server.aufgaben[i].abgabe).stunden}\` Stunde/n bis zur Abgabe\n**Ersteller**: ${server.aufgaben[i].ersteller}`, false)
 				}
 				interaction.reply({embeds: [embedAufgaben]});
 			}
@@ -233,7 +233,7 @@ function fachZuFarbe(fach) {
 }
 
 function difTime(date) {
-	date = new Date(date);
+	date = new Date(date.jahr, date.monat, date.tag);
 	
 	dif =  ( date.getTime() - 2628000000 + (10 * 3600000)) - new Date().getTime() ;
 	tage = 0
