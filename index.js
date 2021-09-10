@@ -69,27 +69,55 @@ client.on('interactionCreate', async interaction => {
 			
 			guildID = interaction.guildId
 			
-			console.log(guildID)
-			
-
-			// Letze  	versuchen das automatisch array erstellt wenn nicht vorhanden und eingetragen werden und sonst im vorhandenen array eintragen
-					// servers[guildID] = ({fach:fach, aufgabe:aufgabe, tag:tag})
-
 			if (!servers[guildID]) {
 				servers[guildID] = {}
 			}
 
 			server = servers[guildID]
 			if (server.aufgaben || server["aufgaben"]) {
-				server["aufgaben"].push({"fach": inputs.fach, "aufgabe": {"jahr": inputs.abgabe.getFullYear(), "monat": inputs.abgabe.getMonth(), "tag": inputs.abgabe.getDate()}, "abgabe": inputs.abgabe, "ersteller": interaction.user.tag})
+				server["aufgaben"].push({"fach": inputs.fach, "aufgabe": inputs.aufgabe, "abgabe": {"jahr": inputs.abgabe.getFullYear(), "monat": inputs.abgabe.getMonth(), "tag": inputs.abgabe.getDate()}, "ersteller": interaction.user.tag})
 			}
 			else {
 				server["aufgaben"] = []
-				server["aufgaben"].push({"fach": inputs.fach, "aufgabe": {"jahr": inputs.abgabe.getFullYear(), "monat": inputs.abgabe.getMonth(), "tag": inputs.abgabe.getDate()}, "abgabe": inputs.abgabe, "ersteller": interaction.user.tag})
+				server["aufgaben"].push({"fach": inputs.fach, "aufgabe": inputs.aufgabe, "abgabe": {"jahr": inputs.abgabe.getFullYear(), "monat": inputs.abgabe.getMonth(), "tag": inputs.abgabe.getDate()}, "ersteller": interaction.user.tag})
 			}
 
 			fs.writeFileSync('./data.json', JSON.stringify(json, null, 3));
 
+		}
+		else if (interaction.options.getSubcommand() === 'list') {
+			
+			const errorGuild = new MessageEmbed()
+				.setColor('#E74C3C')
+				.setTitle(' ')
+				.setDescription(':x: Error: Es gab einen Fehler beim lesen der Serverdatei, bitte versuche es doch später erneut');
+			
+			
+			var data	= fs.readFileSync('./data.json'),
+    			json	= JSON.parse(data),
+				servers = json.Servers,
+				guildID = interaction.guildId;
+
+			if (!servers[guildID]) {
+				await interaction.reply({embeds: [errorGuild]});
+				return;
+			}
+
+			var server = servers[guildID];
+			
+			
+			if (server.aufgaben.length > 0) {
+				const embedAufgaben = new MessageEmbed()
+				.setColor(getRandomColor())
+				.setTitle('Folgende Aufgaben sind zu erledigen')
+				.setDescription(' ')
+
+				for (let i = 0; i < server.aufgaben.length; i++) {
+					embedAufgaben
+						.addField(`${i} `, `**Fach**: ${server.aufgaben[i].fach}\n**Aufgabe**: ${server.aufgaben[i].aufgabe}\n**Abgabe:** Es sind noch ${difTime(server.aufgaben[i].abgabe).tage} Tage/n und ${difTime(server.aufgaben[i].abgabe).stunden} Stunde/n bis zur Abgabe\n**Ersteller**: ${server.aufgaben[i].ersteller}`, false)
+				}
+				interaction.reply({embeds: [embedAufgaben]});
+			}
 		}
 	}
 
@@ -205,6 +233,8 @@ function fachZuFarbe(fach) {
 }
 
 function difTime(date) {
+	date = new Date(date);
+	
 	dif =  ( date.getTime() - 2628000000 + (10 * 3600000)) - new Date().getTime() ;
 	tage = 0
 	for (let i = 0; dif >= 86400000; i++) {
@@ -217,5 +247,9 @@ function difTime(date) {
 	}
 }
 
+function getRandomColor() {
+	colors = ['#1ABC9C', '#2ECC71', '#3498DB', '#9B59B6', '#34495E', '#16A085', '#16A085', '#27AE60', '#2980B9', '#8E44AD', '#2C3E50', '#F1C40F', '#E67E22', '#E74C3C', '#ECF0F1', '#95A5A6', '#F39C12', '#D35400', '#C0392B', '#BDC3C7', '#7F8C8D'] 
+	return colors[Math.floor(Math.random() * colors.length)];
+}
 
 
