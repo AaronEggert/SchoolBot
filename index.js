@@ -3,11 +3,18 @@ const { Client, Intents, MessageEmbed } = require('discord.js');
 const { token } = require('./config.json');
 const fs = require('fs');
 const { isArrayBufferView } = require('util/types');
+const { v4: uuidv4 } = require('uuid');
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
 client.once('ready', () => {
 	console.log(`Logged in as ${client.user.tag}, at ${new Date()}.`);
+
+	
+	
+	for (let i = 0;  i < 50; i++) {
+		console.log(ID())
+	}
 });
 
 client.on('interactionCreate', async interaction => {
@@ -60,7 +67,7 @@ client.on('interactionCreate', async interaction => {
 			const embed1 = new MessageEmbed()
 				.setColor(fachZuFarbe(inputs.fach))
 				.setTitle('')
-				.setDescription(`**Aufgabe**:	${inputs.aufgabe}\n**Fach**:\t${inputs.fach}\n **Datum**:\t${inputs.abgabe.getDate()}.${inputs.abgabe.getMonth()}.${inputs.abgabe.getFullYear()}\n **Ersteller**:\t${interaction.user.tag}`)
+				.setDescription(`**Aufgabe**:	${inputs.aufgabe}\n**Fach**:\t${inputs.fach}\n **Datum**:\t${inputs.abgabe.tag}.${inputs.abgabe.monat}.${inputs.abgabe.jahr}\n **Ersteller**:\t${interaction.user.tag}`)
 
 			await interaction.reply({embeds: [embed1, embed2]})
 			var data  = fs.readFileSync('./data.json'),
@@ -75,28 +82,59 @@ client.on('interactionCreate', async interaction => {
 
 			server = servers[guildID]
 			if (server.aufgaben || server["aufgaben"]) {
-				server["aufgaben"].push({"fach": inputs.fach, "aufgabe": inputs.aufgabe, "abgabe": {"jahr": inputs.abgabe.getFullYear(), "monat": inputs.abgabe.getMonth(), "tag": inputs.abgabe.getDate()}, "ersteller": interaction.user.tag})
+				server["aufgaben"].push({"fach": inputs.fach, "aufgabe": inputs.aufgabe, "abgabe": {"jahr": inputs.abgabe.getFullYear(), "monat": inputs.abgabe.getMonth(), "tag": inputs.abgabe.getDate()}, "ersteller": interaction.user.tag, "id": ID()})
 			}
 			else {
 				server["aufgaben"] = []
-				server["aufgaben"].push({"fach": inputs.fach, "aufgabe": inputs.aufgabe, "abgabe": {"jahr": inputs.abgabe.getFullYear(), "monat": inputs.abgabe.getMonth(), "tag": inputs.abgabe.getDate()}, "ersteller": interaction.user.tag})
+				server["aufgaben"].push({"fach": inputs.fach, "aufgabe": inputs.aufgabe, "abgabe": {"jahr": inputs.abgabe.getFullYear(), "monat": inputs.abgabe.getMonth(), "tag": inputs.abgabe.getDate()}, "ersteller": interaction.user.tag, "id": ID()})
 			}
 
 			fs.writeFileSync('./data.json', JSON.stringify(json, null, 3));
 
 		}
 		else if (interaction.options.getSubcommand() === 'list') {
+			var data	= fs.readFileSync('./data.json'),
+				json	= JSON.parse(data),
+				servers = json.Servers,
+				guildID = interaction.guildId;
 			
+
+
+
+			id = interaction.options.getString('id') 
+			console.log(id)
+			console.log('--------------------------')
+			if (id) {
+				var isIn = false;
+				for (let i = 0; i < servers[guildID].aufgaben.length; i++) {
+					console.log(servers[guildID].aufgaben[i].id)
+					if (servers[guildID].aufgaben[i].id == id) { 
+						isIn = true;
+						
+						dateAufgabe = new Date(servers[guildID].aufgaben[i].abgabe.jahr, servers[guildID].aufgaben[i].abgabe.monat, servers[guildID].aufgaben[i].abgabe.tag)
+						const embedEinzelnAufgabe = new MessageEmbed()
+							.setColor(fachZuFarbe(convertFach(servers[guildID].aufgaben[i].fach)))						
+							.setTitle(`Aufgbae: ${id}`)
+							.setDescription(`**Fach**:      ${servers[guildID].aufgaben[i].fach}\n**Aufgabe**:   ${servers[guildID].aufgaben[i].aufgabe}\n**Abgabe**:    ${dateAufgabe.getDay()} ${dateAufgabe.getDate()}.${dateAufgabe.getMonth()}.${dateAufgabe.getFullYear()}\nEs sind noch \`${interactionDataToDate(servers[guildID].aufgaben[i].abgabe).tag}\` Tag/e und \`${interactionDataToDate(servers[guildID].aufgaben[i].abgabe).stunden}\` Stunden bis zur Abgabe\n**Ersteller**: ${servers[guildID].aufgaben[i].ersteller}`)
+						interaction.reply({embeds:[embedEinzelnAufgabe]});
+						return;
+					} else {
+						const embedErrorID = new MessageEmbed()
+							.setTitle('')
+							.setDescription(':x: Error: Invaild ID')
+							.setColor('#C0392B')
+						interaction.reply({embeds:[embedErrorID]});
+					}
+				}
+			}
+
+
 			const errorGuild = new MessageEmbed()
 				.setColor('#E74C3C')
 				.setTitle(' ')
 				.setDescription(':x: Error: Es gab einen Fehler beim lesen der Serverdatei, bitte versuche es doch später erneut');
 			
 			
-			var data	= fs.readFileSync('./data.json'),
-    			json	= JSON.parse(data),
-				servers = json.Servers,
-				guildID = interaction.guildId;
 
 			if (!servers[guildID]) {
 				await interaction.reply({embeds: [errorGuild]});
@@ -114,7 +152,7 @@ client.on('interactionCreate', async interaction => {
 
 				for (let i = 0; i < server.aufgaben.length; i++) {
 					embedAufgaben
-						.addField(`${i} `, `**Fach**: ${server.aufgaben[i].fach}\n**Aufgabe**: ${server.aufgaben[i].aufgabe}\n**Abgabe:** Es sind noch \`${difTime(server.aufgaben[i].abgabe).tage}\` Tage/n und \`${difTime(server.aufgaben[i].abgabe).stunden}\` Stunde/n bis zur Abgabe\n**Ersteller**: ${server.aufgaben[i].ersteller}`, false)
+						.addField(`${i} `, `**Fach**: ${server.aufgaben[i].fach}\n**Aufgabe**: ${server.aufgaben[i].aufgabe}\n**Abgabe:** Es sind noch \`${difTime(server.aufgaben[i].abgabe).tage}\` Tage/n und \`${difTime(server.aufgaben[i].abgabe).stunden}\` Stunde/n bis zur Abgabe\n**Ersteller**: ${server.aufgaben[i].ersteller}\n**ID**: ${server.aufgaben[i].id}`, false)
 				}
 				interaction.reply({embeds: [embedAufgaben]});
 			}
@@ -252,4 +290,7 @@ function getRandomColor() {
 	return colors[Math.floor(Math.random() * colors.length)];
 }
 
-
+// return unic id	
+function ID () {
+	return '' + Math.random().toString(36).substr(2, 6);
+  };

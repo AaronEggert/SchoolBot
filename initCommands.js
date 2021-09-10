@@ -66,6 +66,12 @@ const commands = [
         subcommand
             .setName('list')
             .setDescription('Lists all open homeworks')
+            .addStringOption(option =>
+                option
+                    .setName('id')
+                    .setDescription('ID der Aufgabe um mehr infos zu sehen')
+                    .setRequired(false)
+                )
     )
     .addSubcommand(subcommand =>  
         subcommand
