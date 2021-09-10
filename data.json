@@ -4,103 +4,14 @@
          "aufgaben": [
             {
                "fach": "mathe",
-               "aufgabe": "advsre",
-               "abgabe": {
-                  "jahr": 2021,
-                  "monat": 9,
-                  "tag": 12
-               },
-               "ersteller": "<Aaron>#9644"
-            },
-            {
-               "fach": "deutsch",
-               "aufgabe": "Test aufgabe deutsch",
+               "aufgabe": "se",
                "abgabe": {
                   "jahr": 2021,
                   "monat": 9,
                   "tag": 15
                },
-               "ersteller": "<Aaron>#9644"
-            },
-            {
-               "fach": "mathe",
-               "aufgabe": "advsre",
-               "abgabe": {
-                  "jahr": 2021,
-                  "monat": 9,
-                  "tag": 12
-               },
-               "ersteller": "<Aaron>#9644"
-            },
-            {
-               "fach": "deutsch",
-               "aufgabe": "Test aufgabe deutsch",
-               "abgabe": {
-                  "jahr": 2021,
-                  "monat": 9,
-                  "tag": 15
-               },
-               "ersteller": "<Aaron>#9644"
-            },
-            {
-               "fach": "mathe",
-               "aufgabe": "advsre",
-               "abgabe": {
-                  "jahr": 2021,
-                  "monat": 9,
-                  "tag": 12
-               },
-               "ersteller": "<Aaron>#9644"
-            },
-            {
-               "fach": "deutsch",
-               "aufgabe": "Test aufgabe deutsch",
-               "abgabe": {
-                  "jahr": 2021,
-                  "monat": 9,
-                  "tag": 15
-               },
-               "ersteller": "<Aaron>#9644"
-            },
-            {
-               "fach": "mathe",
-               "aufgabe": "advsre",
-               "abgabe": {
-                  "jahr": 2021,
-                  "monat": 9,
-                  "tag": 12
-               },
-               "ersteller": "<Aaron>#9644"
-            },
-            {
-               "fach": "deutsch",
-               "aufgabe": "Test aufgabe deutsch",
-               "abgabe": {
-                  "jahr": 2021,
-                  "monat": 9,
-                  "tag": 15
-               },
-               "ersteller": "<Aaron>#9644"
-            },
-            {
-               "fach": "mathe",
-               "aufgabe": "advsre",
-               "abgabe": {
-                  "jahr": 2021,
-                  "monat": 9,
-                  "tag": 12
-               },
-               "ersteller": "<Aaron>#9644"
-            },
-            {
-               "fach": "deutsch",
-               "aufgabe": "Test aufgabe deutsch",
-               "abgabe": {
-                  "jahr": 2021,
-                  "monat": 9,
-                  "tag": 15
-               },
-               "ersteller": "<Aaron>#9644"
+               "ersteller": "<Aaron>#9644",
+               "id": "q1i220"
             }
          ]
       }
