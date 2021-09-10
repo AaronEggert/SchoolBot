@@ -3,18 +3,11 @@ const { Client, Intents, MessageEmbed } = require('discord.js');
 const { token } = require('./config.json');
 const fs = require('fs');
 const { isArrayBufferView } = require('util/types');
-const { v4: uuidv4 } = require('uuid');
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
 client.once('ready', () => {
 	console.log(`Logged in as ${client.user.tag}, at ${new Date()}.`);
-
-	
-	
-	for (let i = 0;  i < 50; i++) {
-		console.log(ID())
-	}
 });
 
 client.on('interactionCreate', async interaction => {
