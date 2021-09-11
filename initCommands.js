@@ -83,8 +83,20 @@ const commands = [
                     .setDescription('ID der Aufgabe')
                     .setRequired(true)
                 )
-    )
-    
+    ),
+    new SlashCommandBuilder().setName('setup').setDescription('Um den Bot einzurichten')
+    .addChannelOption(option => 
+        option
+            .setName('hausaufgaben-channel')
+            .setDescription('Der Textkanal in dem alle Offenen aufgaben angezeigt werden')
+            .setRequired(true)
+        )
+    .addChannelOption(option => 
+        option
+            .setName('log-channel')
+            .setDescription('Der Textkanal in dem alle Aktionen dukumentiert werden')
+        )
+
 ]
 	.map(command => command.toJSON());
 

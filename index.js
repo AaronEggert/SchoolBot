@@ -183,6 +183,36 @@ client.on('interactionCreate', async interaction => {
 			}
 		}
 	}
+	if (commandName === 'setup') {
+		const embedStartMessage = new MessageEmbed()
+			.setColor(getRandomColor())
+			.setTitle('Bot einrichten')
+			.setDescription('Vielen dank für das benuzen des Bots! \n')
+
+			var data	= fs.readFileSync('./data.json'),
+				json	= JSON.parse(data),
+				servers = json.Servers,
+				guildID = interaction.guildId,
+				server 	= servers[guildID];
+					
+			const hausaufgabenChannel = interaction.options.getChannel('hausaufgaben-channel');
+			var logChannel = interaction.options.getChannel('log-channel');
+			if (logChannel.type != 'GUILD_TEXT') {
+				logChannel = null;
+			}
+			else {
+				logChannel = logChannel.id;
+			}
+
+			if (hausaufgabenChannel.type == 'GUILD_TEXT') {
+				server['config'] = {
+					"hausaufgabenChannel": hausaufgabenChannel.id,
+					"logChannel": logChannel
+				}
+				fs.writeFileSync('./data.json', JSON.stringify(json, null, 3));
+			}
+	}
+
 });
 
 client.on('guildCreate', guild => {
@@ -328,4 +358,28 @@ function getRandomColor() {
 // return unic id	
 function ID () {
 	return '' + Math.random().toString(36).substr(2, 6);
-  };
+};
+
+function checkInTime() {
+	var data	= fs.readFileSync('./data.json'),
+		json	= JSON.parse(data),
+		servers	= json.Servers,
+		guildID = interaction.guildId,
+		server 	= servers[guildID];
+
+	for (let i = 0; server.aufgaben.length; i++) {
+		var dif = difTIme(server.aufgaben[i].abgabe);
+		if (dif.tage == 0 && dif.stunden <= 0) {
+			delete server.aufgaben[i];
+		}
+	}
+	var filter = server.aufgaben.filter(function (el) {
+		return el != null;
+	});
+	server.aufgaben = filter;
+	fs.writeFileSync('./data.json', JSON.stringify(json, null, 3));
+}
+
+function updateAusaufgabenChannel() {
+	
+}
