@@ -77,6 +77,12 @@ const commands = [
         subcommand
             .setName('delete')
             .setDescription('Deletes Homework')
+            .addStringOption(option =>
+                option
+                    .setName('id')
+                    .setDescription('ID der Aufgabe')
+                    .setRequired(true)
+                )
     )
     
 ]

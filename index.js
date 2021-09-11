@@ -60,7 +60,7 @@ client.on('interactionCreate', async interaction => {
 			const embed1 = new MessageEmbed()
 				.setColor(fachZuFarbe(inputs.fach))
 				.setTitle('')
-				.setDescription(`**Aufgabe**:	${inputs.aufgabe}\n**Fach**:\t${inputs.fach}\n **Datum**:\t${inputs.abgabe.tag}.${inputs.abgabe.monat}.${inputs.abgabe.jahr}\n **Ersteller**:\t${interaction.user.tag}`)
+				.setDescription(`**Aufgabe**:	${inputs.aufgabe}\n**Fach**:\t${inputs.fach}\n **Datum**:\t${inputs.abgabe.getDate()}.${inputs.abgabe.getMonth()}.${inputs.abgabe.getFullYear()}\n **Ersteller**:\t${interaction.user.tag}`)
 
 			await interaction.reply({embeds: [embed1, embed2]})
 			var data  = fs.readFileSync('./data.json'),
@@ -89,53 +89,40 @@ client.on('interactionCreate', async interaction => {
 			var data	= fs.readFileSync('./data.json'),
 				json	= JSON.parse(data),
 				servers = json.Servers,
-				guildID = interaction.guildId;
+				guildID = interaction.guildId,
+				id = interaction.options.getString('id');
 			
-
-
-
-			id = interaction.options.getString('id') 
-			console.log(id)
-			console.log('--------------------------')
 			if (id) {
-				var isIn = false;
 				for (let i = 0; i < servers[guildID].aufgaben.length; i++) {
-					console.log(servers[guildID].aufgaben[i].id)
 					if (servers[guildID].aufgaben[i].id == id) { 
-						isIn = true;
-						
 						dateAufgabe = new Date(servers[guildID].aufgaben[i].abgabe.jahr, servers[guildID].aufgaben[i].abgabe.monat, servers[guildID].aufgaben[i].abgabe.tag)
 						const embedEinzelnAufgabe = new MessageEmbed()
-							.setColor(fachZuFarbe(convertFach(servers[guildID].aufgaben[i].fach)))						
-							.setTitle(`Aufgbae: ${id}`)
-							.setDescription(`**Fach**:      ${servers[guildID].aufgaben[i].fach}\n**Aufgabe**:   ${servers[guildID].aufgaben[i].aufgabe}\n**Abgabe**:    ${dateAufgabe.getDay()} ${dateAufgabe.getDate()}.${dateAufgabe.getMonth()}.${dateAufgabe.getFullYear()}\nEs sind noch \`${interactionDataToDate(servers[guildID].aufgaben[i].abgabe).tag}\` Tag/e und \`${interactionDataToDate(servers[guildID].aufgaben[i].abgabe).stunden}\` Stunden bis zur Abgabe\n**Ersteller**: ${servers[guildID].aufgaben[i].ersteller}`)
+							.setColor(fachZuFarbe(servers[guildID].aufgaben[i].fach))						
+							.setTitle(`Aufgabe: ${id}`)
+							.setDescription(`**Fach**:      ${servers[guildID].aufgaben[i].fach}\n**Aufgabe**:   ${servers[guildID].aufgaben[i].aufgabe}\n**Abgabe**:   ${dateAufgabe.getDate()}.${dateAufgabe.getMonth()}.${dateAufgabe.getFullYear()}\nEs sind noch \`${difTime(servers[guildID].aufgaben[i].abgabe).tage}\` Tag/e und \`${difTime(servers[guildID].aufgaben[i].abgabe).stunden}\` Stunden bis zur Abgabe\n**Ersteller**: ${servers[guildID].aufgaben[i].ersteller}`)
 						interaction.reply({embeds:[embedEinzelnAufgabe]});
 						return;
-					} else {
-						const embedErrorID = new MessageEmbed()
-							.setTitle('')
+					}
+				}
+				const embedErrorID = new MessageEmbed()
+							.setTitle(' ')
 							.setDescription(':x: Error: Invaild ID')
 							.setColor('#C0392B')
 						interaction.reply({embeds:[embedErrorID]});
-					}
-				}
+				return;
 			}
-
 
 			const errorGuild = new MessageEmbed()
 				.setColor('#E74C3C')
 				.setTitle(' ')
 				.setDescription(':x: Error: Es gab einen Fehler beim lesen der Serverdatei, bitte versuche es doch später erneut');
 			
-			
-
 			if (!servers[guildID]) {
 				await interaction.reply({embeds: [errorGuild]});
 				return;
 			}
 
 			var server = servers[guildID];
-			
 			
 			if (server.aufgaben.length > 0) {
 				const embedAufgaben = new MessageEmbed()
@@ -149,10 +136,53 @@ client.on('interactionCreate', async interaction => {
 				}
 				interaction.reply({embeds: [embedAufgaben]});
 			}
+			else {
+				const embedKeineAufgaben = new MessageEmbed()
+					.setTitle('')
+					.setDescription('Es sind keine offnen Aufgaben')
+					.setColor('#8E44AD');
+				interaction.reply({embeds:[embedKeineAufgaben]});
+			}
+		}
+		else if (interaction.options.getSubcommand() === 'delete') {
+			var data	= fs.readFileSync('./data.json'),
+				json	= JSON.parse(data),
+				servers = json.Servers,
+				guildID = interaction.guildId,
+				id 		= interaction.options.getString('id');
+			
+			if (id) {
+				if (servers[guildID].aufgaben.length != 0) {
+					for (let i = 0; i < servers[guildID].aufgaben.length; i++) {
+						if (servers[guildID].aufgaben[i].id == id) {
+							delete servers[guildID].aufgaben[i];
+							 var filter = servers[guildID].aufgaben.filter(function (el) {
+								return el != null;
+							  });
+							servers[guildID].aufgaben = filter;
+							console.log(servers[guildID].aufgaben)
+
+							fs.writeFileSync('./data.json', JSON.stringify(json, null, 3));
+							
+							const embedDeleteSuccess = new MessageEmbed()
+							  .setColor('#27AE60')
+							  .setTitle('')
+							  .setDescription(`:white_check_mark: Aufgabe Erfolgreich Gelöscht: \`${id}\``)
+
+							interaction.reply({embeds: [embedDeleteSuccess]});
+							return;
+						}
+					}
+				}
+
+				const embedKeineAufgaben = new MessageEmbed()
+					.setTitle('')
+					.setDescription('Es sind keine offnen Aufgaben die du löschen kannst')
+					.setColor('#8E44AD');
+				interaction.reply({embeds:[embedKeineAufgaben]});
+			}
 		}
 	}
-
-
 });
 
 client.on('guildCreate', guild => {
@@ -164,7 +194,6 @@ client.login(token);
 
 function interactionDataToDate(jahr, monat, tag) {
 	var _tempJahr, _tempMonat;
-
 	switch (jahr) {
 		case 'year_2021':
 			_tempJahr = 2021;
@@ -183,7 +212,7 @@ function interactionDataToDate(jahr, monat, tag) {
 			break
 		default:
 			return 'Error: Invalid jahr'
-	}
+	} 
 
 	switch (monat) {
 		case 'month_jannuar':
@@ -230,7 +259,7 @@ function interactionDataToDate(jahr, monat, tag) {
 	{
 		return 'Error: Invalid tag';
 	}
-
+	console.log(_tempJahr, _tempMonat, tag)
 	return new Date(_tempJahr, _tempMonat, tag)
 
 }
@@ -271,10 +300,23 @@ function difTime(date) {
 	for (let i = 0; dif >= 86400000; i++) {
 		dif -= 86400000;
 		tage++;
-	}
+	}	
 	return zeit = {
 		"stunden": Math.round(dif / 3600000),
 		"tage": tage
+	}
+}
+
+function ConvertZahlZuWochentag(zahl) {
+	switch (zahl) {
+		case 0: return 'Montag'
+		case 1: return 'Dienstag'
+		case 2: return 'Mitwoch'
+		case 3: return 'Donnerstag'
+		case 4: return 'Freitag'
+		case 5: return 'Samstag'
+		case 6: return 'Sonntag'
+		default: return 'Error: Invalid zahl'
 	}
 }
 
