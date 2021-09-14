@@ -8,6 +8,8 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
 client.once('ready', () => {
 	console.log(`Logged in as ${client.user.tag}, at ${new Date()}.`);
+	checking();
+	setInterval(checking,(6000 * 60 * 8));
 });
 
 client.on('interactionCreate', async interaction => {
@@ -453,11 +455,10 @@ function ID () {
 	return '' + Math.random().toString(36).substr(2, 6);
 };
 
-function checkInTime(interaction) {
+function checkInTime(guildID) {
 	var data	= fs.readFileSync('./data.json'),
 		json	= JSON.parse(data),
 		servers	= json.Servers,
-		guildID = interaction.guildId,
 		server 	= servers[guildID];
 
 	for (let i = 0; i < server.aufgaben.length; i++) {
@@ -466,6 +467,44 @@ function checkInTime(interaction) {
 			delete server.aufgaben[i];
 		}
 	}
+
+	haChannel = client.guilds.cache.find(g => g.id == guildID).channels.cache.find(ch => ch.id == server.config.hausaufgabenChannel);
+	// console.log(haChannel);
+	try {
+		haChannel.bulkDelete(50);
+	}
+	catch (e) {
+		console.log(e);
+	}
+	if (haChannel) {
+		const embedHaChannel = new MessageEmbed();
+		if (server.aufgaben.length >= 0) {
+			embedHaChannel
+				.setColor('#8E44AD')
+				.setDescription(':white_check_mark: Es sind zurzeit keine Hausaugaben in den \`nächsten 2 Tagen\` offen')
+		} else {
+			embedHaChannel
+				.setColor('#1ABC9C')
+				.setDescription('Folgende Aufgaben sind in den nächsten 2 Tagen fällig:')
+		}
+		haChannel.send({embeds: [embedHaChannel]});
+		
+		for (let i = 0; i < server.aufgaben.length; i++) {
+			if (difTime(server.aufgaben[i].abgabe).tage <= 2) {
+				const embedAufgabe = new MessageEmbed()
+					.setColor(fachZuFarbe(server.aufgaben[i].fach))
+					.setTitle(`Aufgabe: ${server.aufgaben[i].id}`)
+					.setDescription(`**Fach**:      ${server.aufgaben[i].fach}\n**Aufgabe**:   ${server.aufgaben[i].aufgabe}\n**Abgabe**: Es sind noch \`${difTime(server.aufgaben[i].abgabe).tage}\` Tag/e und \`${difTime(server.aufgaben[i].abgabe).stunden}\` Stunden bis zur Abgabe\n**Ersteller**: ${server.aufgaben[i].ersteller}`)
+				
+				haChannel.send({embeds: [embedAufgabe]});
+					
+			}
+		}
+	} else {
+
+	}
+
+
 	var filter = server.aufgaben.filter(function (el) {
 		return el != null;
 	});
@@ -538,5 +577,16 @@ function SetHausaufgabenHilfeAktiv(boolean, guild) {
 				console.log(guild.roles.find(role => role.id == current.helpRole));
 			}
 		}
+	}
+}
+
+function checking() {
+	var	data	= fs.readFileSync('./data.json'),
+		json	= JSON.parse(data),
+		servers	= json.Servers;
+
+	for (i in servers) {
+		// console.log(i);
+		checkInTime(i)
 	}
 }
