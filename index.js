@@ -18,7 +18,7 @@ client.on('interactionCreate', async interaction => {
 	if (commandName === 'ping') {
 		await interaction.reply('Pong!');
 	} else if (commandName === 'server') {
-		await interaction.reply('Server info.');
+		SetHausaufgabenHilfeAktiv(true, interaction.guild);
 	} else if (commandName === 'user') {
 		console.log(interaction.options.getString('input'));
 		console.log(interaction.options.getBoolean('test'));
@@ -182,6 +182,102 @@ client.on('interactionCreate', async interaction => {
 				interaction.reply({embeds:[embedKeineAufgaben]});
 			}
 		}
+		else if (interaction.options.getSubcommand() === 'help') {
+			var beschreibung 	= interaction.options.getString('problem'),
+				id  			= interaction.options.getString('id'),
+				aufgabenID		= null,
+				guild			= interaction.guild,
+				data			= fs.readFileSync('./data.json'),
+				json			= JSON.parse(data),
+				servers 		= json.Servers,
+				guildID 		= interaction.guildId,
+				server 			= servers[guildID];
+				category		= server.config.hausaufgabenHilfe.category;
+
+			if (id) {
+				for (let i = 0; i < server.aufgaben.length; i++) {
+					if (id == server.aufgaben[i].id) {
+						aufgabenID = id;
+					}
+				}
+			}
+			
+			var help = {
+				problem: beschreibung,
+				id: aufgabenID,
+				guild: guild,
+				category: guild.channels.cache.find(ch => ch.name.startsWith('Hausaufgaben-hilfe')),
+				user: interaction.user.tag
+			};
+
+			guild.roles.create({
+				name: `help-${server.config.hausaufgabenHilfe.helps.length + 1}`,
+				color: '#BDC3C7'
+			  }).then(helpRole => {
+
+				  // var helpRole = guild.roles.cache.find(role => role.name.startsWith(`help-${server.config.hausaufgabenHilfe.helps.length + 1}`))
+				//   console.log(helpRole);
+				  guild.channels.create(`help-${server.config.hausaufgabenHilfe.helps.length + 1}`, {
+					  type: "GUILD_TEXT",
+					  permissionOverwrites: [
+						  {
+							type: 'role',  
+							id: guild.roles.everyone,
+							allow: [],
+							deny: ["VIEW_CHANNEL", "SEND_MESSAGES", "CONNECT"]
+						  },
+						  {
+							type: 'role',
+						  	id: helpRole.id,
+						  	allow: ["SEND_MESSAGES", "VIEW_CHANNEL"],
+							deny: []
+						  }
+					  ],
+					}).then(result => {
+						var member = guild.members.cache.get(interaction.user.id);
+			
+						member.roles.add(helpRole);	
+					  //   channel = guild.channels.cache.find(ch => ch.name.startsWith(`help-${server.config.hausaufgabenHilfe.helps.length + 1}`));
+					  //   console.log(result)
+						if (result) {result.setParent(help.category.id)}
+						
+						if (help.id) {
+							for (let i = 0; i < server.aufgaben.length; i++) {
+								if (help.id == server.aufgaben[i].id) {
+									const embedEinzelnAufgabe = new MessageEmbed()
+												.setColor(fachZuFarbe(servers[guildID].aufgaben[i].fach))						
+												.setTitle(`Aufgabe: ${id}`)
+												.setDescription(`**Fach**:      ${servers[guildID].aufgaben[i].fach}\n**Aufgabe**:   ${servers[guildID].aufgaben[i].aufgabe}\n**Abgabe**: Es sind noch \`${difTime(servers[guildID].aufgaben[i].abgabe).tage}\` Tag/e und \`${difTime(servers[guildID].aufgaben[i].abgabe).stunden}\` Stunden bis zur Abgabe\n**Ersteller**: ${servers[guildID].aufgaben[i].ersteller}`)
+												
+											
+									result.send({embeds:[embedEinzelnAufgabe]});
+								}
+			
+							}
+						}
+						const embedHelp1 = new MessageEmbed()
+							.setColor(getRandomColor())
+							.setTitle(`${help.user} braucht Hilfe!`)
+							.setDescription(`**Problem**: ${help.problem}`)
+			
+						result.send({embeds:[embedHelp1]});
+			
+						
+						
+						const embedReturn = new MessageEmbed()
+							.setColor('#27AE60')
+							.setTitle('')
+							.setDescription(':white_check_mark: Hilfe wurde Erstellt')
+						
+						interaction.reply({embeds:[embedReturn]});
+			
+						server.config.hausaufgabenHilfe.helps.push({"nummer": server.config.hausaufgabenHilfe.helps.length + 1, "helpChannel": result.id, "helpRole": helpRole.id,"problem": help.problem, "aufgabenID": help.id, "ersteller": help.user})
+						fs.writeFileSync('./data.json', JSON.stringify(json, null, 3));
+					});
+			  })
+			
+
+		}
 	}
 	if (commandName === 'setup') {
 		const embedStartMessage = new MessageEmbed()
@@ -317,7 +413,7 @@ function fachZuFarbe(fach) {
 		case 'englisch':
 			return 0xE67E22
 		default:
-			return 'Error: Invalid fach'
+			return 'Error: Invalid fach'	
 	}
 	
 }
@@ -382,4 +478,68 @@ function checkInTime() {
 
 function updateAusaufgabenChannel() {
 	
+}
+
+function SetHausaufgabenHilfeAktiv(boolean, guild) { 
+	if (boolean) {
+		channel = guild.channels.cache.find(ch => ch.name.startsWith('Hausaufgaben-hilfe'));
+		if (channel) {
+			// console.log(channel.id); 
+			var data	= fs.readFileSync('./data.json'),
+			json	= JSON.parse(data),
+			servers	= json.Servers,
+			guildID = guild.id,
+			server 	= servers[guildID];
+			for (let i = 0; i < server.config.hausaufgabenHilfe.helps.length; i++) {
+				var current = server.config.hausaufgabenHilfe.helps[i];
+				// guild.channels.cache.find(ch => ch.name.startsWith(`help-${i+1}`)).delete();
+				guild.channels.cache.find(ch => ch.id == current.helpChannel).delete();
+				guild.roles.cache.find(role => role.id == current.helpRole).delete();
+
+			}
+			
+			
+			channel.delete();
+		}
+		
+		guild.channels.create('Hausaufgaben-hilfe', {
+			type: "GUILD_CATEGORY", //This create a text channel, you can make a voice one too, by changing "text" to "voice"
+			permissionOverwrites: [
+				{
+					id: guild.roles.everyone,
+					allow: ["VIEW_CHANNEL"],
+					deny: ["SEND_MESSAGES", "CONNECT"]
+				}
+			],
+		  }).then(result => {
+			var data	= fs.readFileSync('./data.json'),
+			json	= JSON.parse(data),
+			servers	= json.Servers,
+			guildID = guild.id,
+			server 	= servers[guildID];
+
+			server.config["hausaufgabenHilfe"] = {"category": result.id, "helps": []}
+			fs.writeFileSync('./data.json', JSON.stringify(json, null, 3));
+		  });
+		category = guild.channels.cache.find(ch => ch.name.startsWith('Hausaufgaben-hilfe'));
+		// console.log(category)
+		
+	}
+	else if (!boolean) {
+		channel = guild.channels.cache.find(ch => ch.name.startsWith('hausaufgaben-hilfe'));
+		if (channel) {
+			channel.delete();
+			var data	= fs.readFileSync('./data.json'),
+			json	= JSON.parse(data),
+			servers	= json.Servers,
+			guildID = guild.id,
+			server 	= servers[guildID];
+			for (let i = 0; i < server.config.hausaufgabenHilfe.helps.length; i++) {
+				var current = server.config.hausaufgabenHilfe.helps[i];
+				// guild.channels.cache.find(ch => ch.name.startsWith(`help-${i+1}`)).delete();
+				guild.channels.cache.find(ch => ch.id == current.helpChannel).delete();
+				console.log(guild.roles.find(role => role.id == current.helpRole));
+			}
+		}
+	}
 }

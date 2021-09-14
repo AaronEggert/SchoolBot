@@ -83,7 +83,25 @@ const commands = [
                     .setDescription('ID der Aufgabe')
                     .setRequired(true)
                 )
-    ),
+    )
+    .addSubcommand(subcommand =>
+        subcommand
+            .setName('help')
+            .setDescription('Hilfe erstellen')
+            .addStringOption(option => 
+                option
+                    .setName('problem')
+                    .setDescription('beschreibe dein Problem wobei du hilfe brauchst')
+                    .setRequired(true)
+                )
+            .addStringOption(option =>
+                option
+                    .setName('id')
+                    .setDescription('hilfe zu einer Bestehenden Aufgabe')
+                    .setRequired(false)
+                )
+        )
+    ,
     new SlashCommandBuilder().setName('setup').setDescription('Um den Bot einzurichten')
     .addChannelOption(option => 
         option
@@ -95,8 +113,8 @@ const commands = [
         option
             .setName('log-channel')
             .setDescription('Der Textkanal in dem alle Aktionen dukumentiert werden')
-        )
-
+        ), 
+    new SlashCommandBuilder().setName('settings').setDescription('Einstellungen')
 ]
 	.map(command => command.toJSON());
 
