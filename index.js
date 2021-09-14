@@ -18,12 +18,9 @@ client.on('interactionCreate', async interaction => {
 	if (commandName === 'ping') {
 		await interaction.reply('Pong!');
 	} else if (commandName === 'server') {
-		SetHausaufgabenHilfeAktiv(true, interaction.guild);
+		checkInTime(interaction);
 	} else if (commandName === 'user') {
-		console.log(interaction.options.getString('input'));
-		console.log(interaction.options.getBoolean('test'));
-		await interaction.reply('User info.');
-
+		SetHausaufgabenHilfeAktiv(true, interaction.guild);
 	}
 
 	if (commandName === 'homework') { 
@@ -456,15 +453,15 @@ function ID () {
 	return '' + Math.random().toString(36).substr(2, 6);
 };
 
-function checkInTime() {
+function checkInTime(interaction) {
 	var data	= fs.readFileSync('./data.json'),
 		json	= JSON.parse(data),
 		servers	= json.Servers,
 		guildID = interaction.guildId,
 		server 	= servers[guildID];
 
-	for (let i = 0; server.aufgaben.length; i++) {
-		var dif = difTIme(server.aufgaben[i].abgabe);
+	for (let i = 0; i < server.aufgaben.length; i++) {
+		var dif = difTime(server.aufgaben[i].abgabe);
 		if (dif.tage == 0 && dif.stunden <= 0) {
 			delete server.aufgaben[i];
 		}
